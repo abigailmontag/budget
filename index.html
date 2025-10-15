@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4f46e5" />
   <link rel="manifest" href="manifest.json" />
-  <title>Budget App</title>
+  <title>Budget Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -17,7 +18,7 @@
     header { text-align: center; margin-top: 1rem; }
     h1 { margin: 0; font-size: 1.8rem; }
     .container {
-      width: 90%; max-width: 400px; background: rgba(255,255,255,0.15);
+      width: 90%; max-width: 420px; background: rgba(255,255,255,0.15);
       padding: 1rem; border-radius: 1rem; margin-top: 1rem;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       backdrop-filter: blur(10px);
@@ -34,20 +35,27 @@
       background: rgba(0,0,0,0.1);
       border-radius: 0.5rem;
       padding: 0.4rem 0.6rem;
-      display: flex; justify-content: space-between;
+      display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 0.3rem;
     }
     .balance {
       font-size: 1.5rem; font-weight: bold;
       text-align: center; margin-top: 1rem;
     }
+    canvas {
+      margin-top: 1rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 1rem;
+      padding: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Budget Tracker</h1>
+    <h1>💰 Budget Tracker</h1>
     <div class="balance" id="balance">Balance: $0</div>
   </header>
+
   <div class="container">
     <input type="number" id="amount" placeholder="Amount" />
     <input type="text" id="note" placeholder="Description" />
@@ -63,30 +71,43 @@
       <option>Utilities</option>
       <option>Entertainment</option>
     </select>
+    <input type="month" id="monthFilter" onchange="update()" />
     <input type="date" id="date" />
     <button onclick="addTransaction()">Add</button>
+
     <div class="list" id="list"></div>
+
+    <canvas id="chart" height="180"></canvas>
   </div>
 
   <script>
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let chart;
 
     function update() {
       const list = document.getElementById('list');
       list.innerHTML = '';
       let balance = 0;
-      transactions.forEach((t, i) => {
+      const monthFilter = document.getElementById('monthFilter').value;
+      const filtered = monthFilter
+        ? transactions.filter(t => t.date.slice(0,7) === monthFilter)
+        : transactions;
+
+      filtered.forEach((t, i) => {
         const div = document.createElement('div');
         div.className = 'item';
         div.innerHTML = `
           <span>${t.date} • ${t.category} • ${t.note}</span>
-          <span>${t.type === 'income' ? '+' : '-'}$${t.amount}</span>
+          <span>${t.type === 'income' ? '+' : '-'}$${t.amount.toFixed(2)}</span>
+          <button style="background:none;border:none;color:white;font-size:1rem" onclick="removeTransaction(${i})">🗑️</button>
         `;
         list.appendChild(div);
         balance += t.type === 'income' ? t.amount : -t.amount;
       });
+
       document.getElementById('balance').textContent = 'Balance: $' + balance.toFixed(2);
       localStorage.setItem('transactions', JSON.stringify(transactions));
+      renderChart(filtered);
     }
 
     function addTransaction() {
@@ -102,11 +123,39 @@
       document.getElementById('note').value = '';
     }
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+    function removeTransaction(index) {
+      transactions.splice(index, 1);
+      update();
     }
 
+    function renderChart(filtered) {
+      const ctx = document.getElementById('chart').getContext('2d');
+      const categories = {};
+      filtered.filter(t => t.type === 'expense').forEach(t => {
+        categories[t.category] = (categories[t.category] || 0) + t.amount;
+      });
+
+      const data = {
+        labels: Object.keys(categories),
+        datasets: [{
+          label: 'Expenses by Category',
+          data: Object.values(categories),
+          backgroundColor: ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6'],
+        }]
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data,
+        options: {
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
+        }
+      });
+    }
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
     update();
   </script>
 </body>
