@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Budget App</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(180deg, #a78bfa 0%, #f9a8d4 100%);
+      margin: 0; padding: 0;
+      color: #fff; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    header { text-align: center; margin-top: 1rem; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    .container {
+      width: 90%; max-width: 400px; background: rgba(255,255,255,0.15);
+      padding: 1rem; border-radius: 1rem; margin-top: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+    }
+    input, select, button {
+      width: 100%; padding: 0.6rem; border: none;
+      border-radius: 0.5rem; margin-top: 0.5rem;
+    }
+    button {
+      background-color: #4f46e5; color: white; font-weight: bold;
+    }
+    .list { margin-top: 1rem; max-height: 250px; overflow-y: auto; }
+    .item {
+      background: rgba(0,0,0,0.1);
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      display: flex; justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+    .balance {
+      font-size: 1.5rem; font-weight: bold;
+      text-align: center; margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Budget Tracker</h1>
+    <div class="balance" id="balance">Balance: $0</div>
+  </header>
+  <div class="container">
+    <input type="number" id="amount" placeholder="Amount" />
+    <input type="text" id="note" placeholder="Description" />
+    <select id="type">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <select id="category">
+      <option>General</option>
+      <option>Food</option>
+      <option>Rent</option>
+      <option>Travel</option>
+      <option>Utilities</option>
+      <option>Entertainment</option>
+    </select>
+    <input type="date" id="date" />
+    <button onclick="addTransaction()">Add</button>
+    <div class="list" id="list"></div>
+  </div>
+
+  <script>
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    function update() {
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      let balance = 0;
+      transactions.forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${t.date} • ${t.category} • ${t.note}</span>
+          <span>${t.type === 'income' ? '+' : '-'}$${t.amount}</span>
+        `;
+        list.appendChild(div);
+        balance += t.type === 'income' ? t.amount : -t.amount;
+      });
+      document.getElementById('balance').textContent = 'Balance: $' + balance.toFixed(2);
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function addTransaction() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      const note = document.getElementById('note').value;
+      const type = document.getElementById('type').value;
+      const category = document.getElementById('category').value;
+      const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+      if (!amount || !note) return alert('Please enter amount and description.');
+      transactions.push({ amount, note, type, category, date });
+      update();
+      document.getElementById('amount').value = '';
+      document.getElementById('note').value = '';
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+
+    update();
+  </script>
+</body>
+</html>
