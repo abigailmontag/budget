@@ -1,162 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#4f46e5" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Budget Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(180deg, #a78bfa 0%, #f9a8d4 100%);
-      margin: 0; padding: 0;
-      color: #fff; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    header { text-align: center; margin-top: 1rem; }
-    h1 { margin: 0; font-size: 1.8rem; }
-    .container {
-      width: 90%; max-width: 420px; background: rgba(255,255,255,0.15);
-      padding: 1rem; border-radius: 1rem; margin-top: 1rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      backdrop-filter: blur(10px);
-    }
-    input, select, button {
-      width: 100%; padding: 0.6rem; border: none;
-      border-radius: 0.5rem; margin-top: 0.5rem;
-    }
-    button {
-      background-color: #4f46e5; color: white; font-weight: bold;
-    }
-    .list { margin-top: 1rem; max-height: 250px; overflow-y: auto; }
-    .item {
-      background: rgba(0,0,0,0.1);
-      border-radius: 0.5rem;
-      padding: 0.4rem 0.6rem;
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.3rem;
-    }
-    .balance {
-      font-size: 1.5rem; font-weight: bold;
-      text-align: center; margin-top: 1rem;
-    }
-    canvas {
-      margin-top: 1rem;
-      background: rgba(255,255,255,0.15);
-      border-radius: 1rem;
-      padding: 0.5rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="manifest.json">
+<title>Budget Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background: linear-gradient(180deg,#a78bfa 0%,#f9a8d4 100%);
+       margin:0;padding:0;color:#fff;min-height:100vh;
+       display:flex;flex-direction:column;align-items:center; }
+header{text-align:center;margin-top:1rem;}
+h1{margin:0;font-size:1.8rem;}
+.container{width:90%;max-width:500px;background:rgba(255,255,255,0.15);
+  padding:1rem;border-radius:1rem;margin-top:1rem;box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  backdrop-filter: blur(10px);}
+input,select,button{width:100%;padding:0.6rem;border:none;border-radius:0.5rem;margin-top:0.5rem;}
+button{background-color:#4f46e5;color:white;font-weight:bold;}
+.list{margin-top:1rem;max-height:250px;overflow-y:auto;}
+.item{background: rgba(0,0,0,0.1); border-radius:0.5rem;
+  padding:0.4rem 0.6rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;}
+.balance{font-size:1.5rem;font-weight:bold;text-align:center;margin-top:1rem;}
+canvas{margin-top:1rem;background:rgba(255,255,255,0.15);border-radius:1rem;padding:0.5rem;}
+.goal-summary{margin-top:1rem;}
+.goal-item{margin-bottom:0.5rem;}
+.progress-bar{background:#fff3;border-radius:0.3rem;height:1rem;position:relative;}
+.progress-fill{height:100%;border-radius:0.3rem;}
+</style>
 </head>
 <body>
-  <header>
-    <h1>💰 Budget Tracker</h1>
-    <div class="balance" id="balance">Balance: $0</div>
-  </header>
+<header>
+<h1>💰 Budget Tracker</h1>
+<div class="balance" id="balance">Balance: $0</div>
+</header>
 
-  <div class="container">
-    <input type="number" id="amount" placeholder="Amount" />
-    <input type="text" id="note" placeholder="Description" />
-    <select id="type">
-      <option value="income">Income</option>
-      <option value="expense">Expense</option>
-    </select>
-    <select id="category">
-      <option>General</option>
-      <option>Food</option>
-      <option>Rent</option>
-      <option>Travel</option>
-      <option>Utilities</option>
-      <option>Entertainment</option>
-    </select>
-    <input type="month" id="monthFilter" onchange="update()" />
-    <input type="date" id="date" />
-    <button onclick="addTransaction()">Add</button>
+<div class="container">
+<input type="number" id="amount" placeholder="Amount">
+<input type="text" id="note" placeholder="Description">
+<select id="type">
+  <option value="income">Income</option>
+  <option value="expense">Expense</option>
+</select>
+<select id="category">
+  <option>General</option>
+  <option>Food</option>
+  <option>Rent</option>
+  <option>Travel</option>
+  <option>Utilities</option>
+  <option>Entertainment</option>
+</select>
+<input type="month" id="monthFilter" onchange="update()">
+<input type="date" id="date">
+<button onclick="addTransaction()">Add</button>
 
-    <div class="list" id="list"></div>
+<div class="list" id="list"></div>
 
-    <canvas id="chart" height="180"></canvas>
-  </div>
+<h3>Category Goals</h3>
+<div id="goalList" class="goal-summary"></div>
+<input type="text" id="goalCategory" placeholder="Category Name">
+<input type="number" id="goalAmount" placeholder="Monthly Goal">
+<button onclick="setGoal()">Set Goal</button>
 
-  <script>
-    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-    let chart;
+<h3>History</h3>
+<select id="monthHistory" onchange="loadMonth(this.value)">
+  <option value="">Current Month</option>
+</select>
 
-    function update() {
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      let balance = 0;
-      const monthFilter = document.getElementById('monthFilter').value;
-      const filtered = monthFilter
-        ? transactions.filter(t => t.date.slice(0,7) === monthFilter)
-        : transactions;
+<canvas id="chart" height="180"></canvas>
+</div>
 
-      filtered.forEach((t, i) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-          <span>${t.date} • ${t.category} • ${t.note}</span>
-          <span>${t.type === 'income' ? '+' : '-'}$${t.amount.toFixed(2)}</span>
-          <button style="background:none;border:none;color:white;font-size:1rem" onclick="removeTransaction(${i})">🗑️</button>
-        `;
-        list.appendChild(div);
-        balance += t.type === 'income' ? t.amount : -t.amount;
-      });
+<script>
+function randomColor(){return '#'+Math.floor(Math.random()*16777215).toString(16);}
+let data=JSON.parse(localStorage.getItem('budgetData'))||{transactions:[],categoryGoals:{},lastMonth:new Date().toISOString().slice(0,7),history:{}};
+const today=new Date();
+const currentMonth=today.toISOString().slice(0,7);
 
-      document.getElementById('balance').textContent = 'Balance: $' + balance.toFixed(2);
-      localStorage.setItem('transactions', JSON.stringify(transactions));
-      renderChart(filtered);
+if(data.lastMonth!==currentMonth){
+  data.history[data.lastMonth]=data.transactions;
+  data.transactions=[];
+  data.lastMonth=currentMonth;
+  localStorage.setItem('budgetData',JSON.stringify(data));
+}
+
+function populateHistory(){
+  const sel=document.getElementById('monthHistory');
+  sel.innerHTML='<option value="">Current Month</option>';
+  for(const m of Object.keys(data.history).sort().reverse()){
+    sel.innerHTML+=`<option value="${m}">${m}</option>`;
+  }
+}
+
+let chart;
+function update(){
+  populateHistory();
+  const list=document.getElementById('list'); list.innerHTML='';
+  const monthFilter=document.getElementById('monthFilter').value;
+  let balance=0;
+  const filtered=monthFilter?data.transactions.filter(t=>t.date.slice(0,7)===monthFilter):data.transactions;
+  filtered.forEach((t,i)=>{
+    const div=document.createElement('div'); div.className='item';
+    div.innerHTML=`<span>${t.date} • ${t.category} • ${t.note}</span>
+                   <span>${t.type==='income'?'+':'-'}$${t.amount.toFixed(2)}</span>
+                   <button style="background:none;border:none;color:white;font-size:1rem" onclick="removeTransaction(${i})">🗑️</button>`;
+    list.appendChild(div);
+    balance+=t.type==='income'?t.amount:-t.amount;
+  });
+  document.getElementById('balance').textContent='Balance: $'+balance.toFixed(2);
+  renderGoals(filtered);
+  renderChart(filtered);
+  renderHistoryChart();
+  localStorage.setItem('budgetData',JSON.stringify(data));
+}
+
+function addTransaction(){
+  const amount=parseFloat(document.getElementById('amount').value);
+  const note=document.getElementById('note').value;
+  const type=document.getElementById('type').value;
+  const category=document.getElementById('category').value;
+  const date=document.getElementById('date').value||new Date().toISOString().slice(0,10);
+  if(!amount||!note)return alert('Enter amount and description');
+  data.transactions.push({amount,note,type,category,date});
+  document.getElementById('amount').value=''; document.getElementById('note').value='';
+  update();
+}
+
+function removeTransaction(index){data.transactions.splice(index,1);update();}
+
+function setGoal(){
+  const category=document.getElementById('goalCategory').value.trim();
+  const amount=parseFloat(document.getElementById('goalAmount').value);
+  if(!category||!amount)return alert('Enter category and goal amount');
+  data.categoryGoals[category]=amount;
+  document.getElementById('goalCategory').value=''; document.getElementById('goalAmount').value='';
+  update();
+}
+
+function renderGoals(filtered){
+  const goalList=document.getElementById('goalList'); goalList.innerHTML='';
+  for(const [cat,goal] of Object.entries(data.categoryGoals)){
+    const spent=filtered.filter(t=>t.category===cat && t.type==='expense').reduce((sum,t)=>sum+t.amount,0);
+    const diff=goal-spent;
+    const pct=Math.min((spent/goal)*100,100);
+    const color=diff>=0?'#34d399':'#f87171';
+    const div=document.createElement('div'); div.className='goal-item';
+    div.innerHTML=`<span>${cat}</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+    <span>Spent: $${spent.toFixed(2)}/$${goal.toFixed(2)} (<strong>${diff>=0?'+':'-'}$${Math.abs(diff).toFixed(2)}</strong>)</span>`;
+    goalList.appendChild(div);
+  }
+}
+
+// Bar chart of current month spent vs goal
+function renderChart(filtered){
+  const ctx=document.getElementById('chart').getContext('2d');
+  const categories={}; for(const cat in data.categoryGoals) categories[cat]=0;
+  filtered.filter(t=>t.type==='expense').forEach(t=>{if(categories[t.category]!==undefined) categories[t.category]+=t.amount;});
+  const labels=Object.keys(categories); const spent=Object.values(categories); const goals=labels.map(l=>data.categoryGoals[l]);
+  const chartData={labels,datasets:[{label:'Spent',data:spent,backgroundColor:'#f87171'},{label:'Goal',data:goals,backgroundColor:'#34d39966'}]};
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:'bar',data:chartData,options:{plugins:{legend:{labels:{color:'#fff'}}},scales:{x:{ticks:{color:'#fff'}},y:{ticks:{color:'#fff'}}}}});
+}
+
+// Historical line chart for past months
+function renderHistoryChart(){
+  let histMonths=Object.keys(data.history).sort();
+  if(histMonths.length===0) return;
+  const ctx=document.getElementById('chart').getContext('2d');
+  const labels=histMonths;
+  const datasets=Object.keys(data.categoryGoals).map(cat=>{
+    return {
+      label:cat,
+      data:labels.map(m=>{
+        const monthData=data.history[m]||[];
+        return monthData.filter(t=>t.category===cat && t.type==='expense').reduce((sum,t)=>sum+t.amount,0);
+      }),
+      borderColor: randomColor(),
+      fill:false
     }
+  });
+  // Temporary merge bar + line
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:'line',data:{labels,datasets},options:{plugins:{legend:{labels:{color:'#fff'}}},scales:{x:{ticks:{color:'#fff'}},y:{ticks:{color:'#fff'}}}}});
+}
 
-    function addTransaction() {
-      const amount = parseFloat(document.getElementById('amount').value);
-      const note = document.getElementById('note').value;
-      const type = document.getElementById('type').value;
-      const category = document.getElementById('category').value;
-      const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
-      if (!amount || !note) return alert('Please enter amount and description.');
-      transactions.push({ amount, note, type, category, date });
-      update();
-      document.getElementById('amount').value = '';
-      document.getElementById('note').value = '';
-    }
+function loadMonth(month){
+  if(!month){data.transactions=[];update();return;}
+  data.transactions=data.history[month]||[];
+  update();
+}
 
-    function removeTransaction(index) {
-      transactions.splice(index, 1);
-      update();
-    }
-
-    function renderChart(filtered) {
-      const ctx = document.getElementById('chart').getContext('2d');
-      const categories = {};
-      filtered.filter(t => t.type === 'expense').forEach(t => {
-        categories[t.category] = (categories[t.category] || 0) + t.amount;
-      });
-
-      const data = {
-        labels: Object.keys(categories),
-        datasets: [{
-          label: 'Expenses by Category',
-          data: Object.values(categories),
-          backgroundColor: ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6'],
-        }]
-      };
-
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data,
-        options: {
-          plugins: { legend: { labels: { color: '#fff' } } },
-          scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
-        }
-      });
-    }
-
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
-    update();
-  </script>
+if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+update();
+</script>
 </body>
 </html>
+
